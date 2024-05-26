@@ -11,7 +11,7 @@ pkgname=(
 #  'libpamac-appstream-plugin'
 )
 pkgver=11.6.4+2+g1421283
-pkgrel=2
+pkgrel=3
 _sover=11.6
 pkgdesc="Library for Pamac package manager based on libalpm"
 arch=('x86_64' 'aarch64')
@@ -41,10 +41,12 @@ options=('debug')
 _commit=14212835ca50c3cb90aac0eed88e07b764dcba0e  # tags/11.6.4^0+2
 source=("git+https://gitlab.manjaro.org/applications/libpamac.git#commit=$_commit"
         manjaro_jp.patch
-        flatpak_trans_run.patch)
+        flatpak_trans_run.patch
+        flatpak_runtime.patch)
 sha256sums=('5a2381203eb0eb423916252d28ae9f9ac37c6d60339564b037b8045bd6a27aea'
             'dc74c3c18f1481b2f86fdaedc6f970378b697cbb53cf892aad2f08a776260855'
-            'e59410bdea888fd673c1a20eac3eb6b7d20d6e7138a6e07c07c7df4969597c78')
+            'e59410bdea888fd673c1a20eac3eb6b7d20d6e7138a6e07c07c7df4969597c78'
+            '329ad9496c45b3beee2a7510ed1c1340b04e62fc720d84c5ae47e87a61bbc361')
 
 if [[ ! "$CC" =~ "gcc" ]];then
   echo "when using clang, LTO is disabled. prevent SEGV."
@@ -68,7 +70,14 @@ pkgver() {
 
 prepare() {
   cd "$pkgbase"
-  patch -p1 -i ../manjaro_jp.patch
+  local src
+  for src in "${source[@]}"; do
+      src="${src%%::*}"
+      src="${src##*/}"
+      [[ $src = *.patch ]] || continue
+      echo "Applying patch $src..."
+      patch -Np1 < "../$src"
+  done
 }
 
 build() {
